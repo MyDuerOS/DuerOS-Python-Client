@@ -22,7 +22,7 @@ logger = logging.getLogger(__file__)
 class SnowBoy(object):
     def __init__(self):
         from snowboy import snowboydecoder
-        model = 'snowboy/xiaoduxiaodu.pmdl'
+        model = 'dueros/snowboy/xiaoduxiaodu.pmdl'
         self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5, audio_gain=1)
 
     def feed_data(self, data):

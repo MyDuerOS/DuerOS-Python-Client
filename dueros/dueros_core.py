@@ -464,7 +464,7 @@ class DuerOS(object):
             return 'Speaker'
         elif namespace == 'ai.dueros.device_interface.system':
             return 'System'
-        elif:
+        else:
             return None
 
     def __enter__(self):

@@ -1,7 +1,7 @@
 DuerOS Python 版本客户端，使用百度的DCS服务(fork from respeaker/avs)
 
 ## Python运行环境变量设置
-        # export PYTHONPATH=xxx/DuerOSClinet-Python:$PYTHONPATH
+        # export PYTHONPATH=xxx/MyAssistant:$PYTHONPATH
 
 ## 认证授权
         # python dueros/auth.py

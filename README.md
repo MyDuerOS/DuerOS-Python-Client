@@ -1,4 +1,4 @@
-DuerOS Python 版本客户端，使用百度的DCS服务(fork from respeaker/avs)
+DuerOS Python 版本客户端，使用百度的DCS服务
 
 ## Python运行环境变量设置
         # export PYTHONPATH=xxx/MyAssistant:$PYTHONPATH

@@ -2,31 +2,27 @@
 
 import json
 import os
-import sys
 import uuid
 
+# 配置文件保存位置
 DEFAULT_CONFIG_FILE = os.path.join(os.path.expanduser('~'), '.dueros.json')
 
+# 开发者注册信息
+client_id = "5GFgMRfHOhIvI0B8AZB78nt676FeWA9n"
+client_secret = "eq2eCNfbtOrGwdlA4vB1N1EaiwjBMu7i"
 
-def load(configfile=None):
-    if configfile is None:
-        if os.path.isfile(DEFAULT_CONFIG_FILE):
-            configfile = DEFAULT_CONFIG_FILE
-        else:
-            product_id = "EddyLiu-" + uuid.uuid4().hex
-            # return {
-            #     "dueros-device-id": product_id,
-            #     "host_url": "dueros-h2.baidu.com",
-            #     "client_id": "5GFgMRfHOhIvI0B8AZB78nt676FeWA9n",
-            #     "client_secret": "eq2eCNfbtOrGwdlA4vB1N1EaiwjBMu7i"
-            # }
 
-            return {
-                "dueros-device-id": product_id,
-                "host_url": "dueros-h2.baidu.com",
-                "client_id": "5GFgMRfHOhIvI0B8AZB78nt676FeWA9n",
-                "client_secret": "eq2eCNfbtOrGwdlA4vB1N1EaiwjBMu7i"
-            }
+def load():
+    if os.path.isfile(DEFAULT_CONFIG_FILE):
+        configfile = DEFAULT_CONFIG_FILE
+    else:
+        product_id = "EddyLiu-" + uuid.uuid4().hex
+
+        return {
+            "dueros-device-id": product_id,
+            "client_id": client_id,
+            "client_secret": client_secret
+        }
 
     with open(configfile, 'r') as f:
         config = json.load(f)

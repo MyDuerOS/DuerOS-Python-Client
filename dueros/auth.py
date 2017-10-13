@@ -1,4 +1,3 @@
-
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
@@ -13,19 +12,17 @@ import dueros.config
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def initialize(self, config, output):
-        self.config = dueros.config.load(configfile=config)
+    def initialize(self, output):
+        self.config = dueros.config.load()
         self.output = output
 
-        if ('host_url' in self.config) and self.config['host_url'] == 'dueros-h2.baidu.com':
-            self.token_url = 'https://openapi.baidu.com/oauth/2.0/token'
-            self.oauth_url = 'https://openapi.baidu.com/oauth/2.0/authorize'
-            self.scope = 'basic'
+        self.token_url = 'https://openapi.baidu.com/oauth/2.0/token'
+        self.oauth_url = 'https://openapi.baidu.com/oauth/2.0/authorize'
 
     @tornado.web.asynchronous
     def get(self):
         redirect_uri = self.request.protocol + "://" + self.request.host + "/authresponse"
-        print '================request.path=',self.request.path
+        print '================request.path=', self.request.path
         if self.request.path == '/authresponse':
             code = self.get_argument("code")
             payload = {
@@ -56,40 +53,34 @@ class MainHandler(tornado.web.RequestHandler):
         else:
             payload = {
                 "client_id": self.config['client_id'],
-                "scope": self.scope,
-                # "scope_data": scope_data,
+                "scope": 'basic',
                 "response_type": "code",
                 "redirect_uri": redirect_uri
             }
 
-
             req = requests.Request('GET', self.oauth_url, params=payload)
             p = req.prepare()
-            print '============redirect url=',p.url
+            print '============redirect url=', p.url
             self.redirect(p.url)
 
 
-def login(config, output):
-    application = tornado.web.Application([(r".*", MainHandler, dict(config=config, output=output))])
+def login():
+    application = tornado.web.Application([(r".*", MainHandler, dict(output=dueros.config.DEFAULT_CONFIG_FILE))])
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(3000)
     tornado.ioloop.IOLoop.instance().start()
     tornado.ioloop.IOLoop.instance().close()
 
-
-@click.command()
-@click.option('--config', '-c', help='configuration json file with product_id, client_id and client_secret')
-@click.option('--output', '-o', default=dueros.config.DEFAULT_CONFIG_FILE, help='output json file with refresh token')
-def main(config, output):
+def main():
     try:
         import webbrowser
     except ImportError:
         print('Go to http://{your device IP}:3000 to start')
-        login(config, output)
+        login()
         return
 
     import threading
-    webserver = threading.Thread(target=login, args=(config, output))
+    webserver = threading.Thread(target=login)
     webserver.daemon = True
     webserver.start()
     print("A web page should is opened. If not, go to http://127.0.0.1:3000 to start")
@@ -104,4 +95,3 @@ def main(config, output):
 
 if __name__ == '__main__':
     main()
-

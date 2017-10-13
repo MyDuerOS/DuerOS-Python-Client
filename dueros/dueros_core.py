@@ -72,11 +72,12 @@ class DuerOS(object):
         self.requests = requests.Session()
 
         self._configfile = config
-        self._config = dueros.config.load(configfile=config)
+        self._config = dueros.config.load()
 
-        if self._config['host_url'] == 'dueros-h2.baidu.com':
-            self._config['api'] = 'dcs/v1'
-            self._config['refresh_url'] = 'https://openapi.baidu.com/oauth/2.0/token'
+        self._config['host_url'] = 'dueros-h2.baidu.com'
+
+        self._config['api'] = 'dcs/v1'
+        self._config['refresh_url'] = 'https://openapi.baidu.com/oauth/2.0/token'
 
         self.last_activity = datetime.datetime.utcnow()
         self._ping_time = None

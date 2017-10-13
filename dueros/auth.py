@@ -17,7 +17,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.config = dueros.config.load(configfile=config)
         self.output = output
 
-        if ('host_url' in self.conf6ig) and self.config['host_url'] == 'dueros-h2.baidu.com':
+        if ('host_url' in self.config) and self.config['host_url'] == 'dueros-h2.baidu.com':
             self.token_url = 'https://openapi.baidu.com/oauth/2.0/token'
             self.oauth_url = 'https://openapi.baidu.com/oauth/2.0/authorize'
             self.scope = 'basic'

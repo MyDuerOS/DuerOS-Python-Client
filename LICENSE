@@ -4,7 +4,7 @@ GNU GENERAL PUBLIC LICENSE
 
     Python implementation of DuerOS Voice Service
     Copyright (C) 2017  Eddy Liu
-    Fork project respeaker/avs from Yihui Xiong
+    refer to project respeaker/avs which is from Yihui Xiong
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

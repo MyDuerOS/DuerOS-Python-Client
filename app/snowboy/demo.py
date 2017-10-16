@@ -1,6 +1,6 @@
-import snowboydecoder
-import sys
 import signal
+
+import snowboydecoder
 
 interrupted = False
 

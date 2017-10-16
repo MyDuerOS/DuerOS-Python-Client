@@ -3,20 +3,18 @@ import tempfile
 import threading
 import uuid
 
-from dueros.player import Player
-
 
 class SpeechSynthesizer(object):
     STATES = {'PLAYING', 'FINISHED'}
 
-    def __init__(self, dueros):
+    def __init__(self, dueros, player):
         self.namespace='ai.dueros.device_interface.voice_output'
         self.dueros = dueros
         self.token = ''
         self.state = 'FINISHED'
         self.finished = threading.Event()
 
-        self.player = Player()
+        self.player = player
         self.player.add_callback('eos', self.SpeechFinished)
         self.player.add_callback('error', self.SpeechFinished)
 

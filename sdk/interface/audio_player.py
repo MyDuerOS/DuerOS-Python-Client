@@ -6,19 +6,17 @@ import os
 import tempfile
 import uuid
 
-from dueros.player import Player
-
 
 class AudioPlayer(object):
     STATES = {'IDLE', 'PLAYING', 'STOPPED', 'PAUSED', 'BUFFER_UNDERRUN', 'FINISHED'}
 
-    def __init__(self, dueros):
-        self.namespace='ai.dueros.device_interface.audio_player'
+    def __init__(self, dueros, player):
+        self.namespace = 'ai.dueros.device_interface.audio_player'
         self.dueros = dueros
         self.token = ''
         self.state = 'IDLE'
 
-        self.player = Player()
+        self.player = player
         self.player.add_callback('eos', self.PlaybackFinished)
         self.player.add_callback('error', self.PlaybackFailed)
 

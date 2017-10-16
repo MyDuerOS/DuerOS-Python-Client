@@ -21,13 +21,13 @@ import datetime
 
 import hyper
 
-from dueros.interface.alerts import Alerts
-from dueros.interface.audio_player import AudioPlayer
-from dueros.interface.speaker import Speaker
-from dueros.interface.speech_recognizer import SpeechRecognizer
-from dueros.interface.speech_synthesizer import SpeechSynthesizer
-from dueros.interface.system import System
-import dueros.config
+from sdk.interface.alerts import Alerts
+from sdk.interface.audio_player import AudioPlayer
+from sdk.interface.speaker import Speaker
+from sdk.interface.speech_recognizer import SpeechRecognizer
+from sdk.interface.speech_synthesizer import SpeechSynthesizer
+from sdk.interface.system import System
+import sdk.config
 
 logger = logging.getLogger(__name__)
 
@@ -50,13 +50,13 @@ class DuerOSStateListner(object):
 
 
 class DuerOS(object):
-    def __init__(self, config=None):
+    def __init__(self, player):
         self.event_queue = queue.Queue()
         self.SpeechRecognizer = SpeechRecognizer(self)
-        self.SpeechSynthesizer = SpeechSynthesizer(self)
-        self.AudioPlayer = AudioPlayer(self)
+        self.SpeechSynthesizer = SpeechSynthesizer(self, player)
+        self.AudioPlayer = AudioPlayer(self, player)
         self.Speaker = Speaker(self)
-        self.Alerts = Alerts(self)
+        self.Alerts = Alerts(self, player)
         self.System = System(self)
 
         self.state_listener = DuerOSStateListner()
@@ -71,8 +71,7 @@ class DuerOS(object):
 
         self.requests = requests.Session()
 
-        self._configfile = config
-        self._config = dueros.config.load()
+        self._config = sdk.config.load()
 
         self._config['host_url'] = 'dueros-h2.baidu.com'
 
@@ -81,6 +80,22 @@ class DuerOS(object):
 
         self.last_activity = datetime.datetime.utcnow()
         self._ping_time = None
+
+    def set_mic(self, mic):
+        '''
+        设置录音mic
+        :param mic:
+        :return:
+        '''
+        self._mic = mic
+
+    def set_player(self, player):
+        '''
+        设置播放器
+        :param player:
+        :return:
+        '''
+        self._player = player
 
     def set_state_listner(self, listner):
         self.state_listener = listner
@@ -448,7 +463,7 @@ class DuerOS(object):
         self._config['expiry'] = expiry_time.strftime(date_format)
         logger.debug(json.dumps(self._config, indent=4))
 
-        dueros.config.save(self._config, configfile=self._configfile)
+        sdk.config.save(self._config, configfile=self._configfile)
 
         return self._config['access_token']
 
@@ -475,37 +490,35 @@ class DuerOS(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
 
+    def main(self):
+        import sys
 
-def main():
-    import sys
-    from dueros.mic import Audio
+        logging.basicConfig(level=logging.DEBUG)
 
-    logging.basicConfig(level=logging.DEBUG)
+        config = None if len(sys.argv) < 2 else sys.argv[1]
 
-    config = None if len(sys.argv) < 2 else sys.argv[1]
+        if not self._mic:
+            print '录音mic未初始化！'
+            exit()
 
-    audio = Audio()
-    dueros = DuerOS(config)
+        audio = self._mic
+        dueros = DuerOS(config)
 
-    audio.link(dueros)
+        audio.link(dueros)
 
-    dueros.start()
-    audio.start()
+        dueros.start()
+        audio.start()
 
-    while True:
-        try:
+        while True:
             try:
-                input('press ENTER to talk\n')
-            except SyntaxError:
-                pass
+                try:
+                    input('press ENTER to talk\n')
+                except SyntaxError:
+                    pass
 
-            dueros.listen()
-        except KeyboardInterrupt:
-            break
+                dueros.listen()
+            except KeyboardInterrupt:
+                break
 
-    dueros.stop()
-    audio.stop()
-
-
-if __name__ == '__main__':
-    main()
+        dueros.stop()
+        audio.stop()

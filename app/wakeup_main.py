@@ -6,8 +6,8 @@ Hands-free DuerOS with respeaker using Snowboy to search keyword
 """
 
 import sys
-import time
 import threading
+import time
 
 try:
     import Queue as queue
@@ -21,7 +21,7 @@ logger = logging.getLogger(__file__)
 
 class SnowBoy(object):
     def __init__(self):
-        from snowboy import snowboydecoder
+        from app.snowboy import snowboydecoder
         model = 'dueros/snowboy/xiaoduxiaodu.pmdl'
         self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5, audio_gain=1)
 
@@ -86,8 +86,8 @@ class KWS(object):
 
 
 def main():
-    from dueros.dueros_core import DuerOS
-    from dueros.mic import Audio
+    from sdk.dueros_core import DuerOS
+    from framework.mic import Audio
 
     logging.basicConfig(level=logging.DEBUG)
 

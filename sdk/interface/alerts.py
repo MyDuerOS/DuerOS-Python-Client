@@ -8,16 +8,14 @@ import dateutil.parser
 from threading import Timer
 import uuid
 
-from dueros.player import Player
-
 
 class Alerts(object):
     STATES = {'IDLE', 'FOREGROUND', 'BACKGROUND'}
 
-    def __init__(self, dueros):
-        self.namespace='ai.dueros.device_interface.alerts'
+    def __init__(self, dueros, player):
+        self.namespace = 'ai.dueros.device_interface.alerts'
         self.dueros = dueros
-        self.player = Player()
+        self.player = player
 
         self.player.add_callback('eos', self.stop)
         self.player.add_callback('error', self.stop)

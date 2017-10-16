@@ -81,21 +81,8 @@ class DuerOS(object):
         self.last_activity = datetime.datetime.utcnow()
         self._ping_time = None
 
-    def set_mic(self, mic):
-        '''
-        设置录音mic
-        :param mic:
-        :return:
-        '''
-        self._mic = mic
-
-    def set_player(self, player):
-        '''
-        设置播放器
-        :param player:
-        :return:
-        '''
-        self._player = player
+    def register_directive_callback(self, callback):
+        self.directive_callback = callback
 
     def set_state_listner(self, listner):
         self.state_listener = listner
@@ -372,7 +359,8 @@ class DuerOS(object):
             self._handle_directive(directive)
 
     def _handle_directive(self, directive):
-        print '============directive:', directive
+        # print '============directive:', directive
+        self.directive_callback(directive)
         logger.debug(json.dumps(directive, indent=4))
         try:
             namespace = directive['header']['namespace']

@@ -8,7 +8,7 @@ import uuid
 DEFAULT_CONFIG_FILE = os.path.join(os.path.expanduser('~'), '.dueros.json')
 
 
-def load(client_id, client_secret):
+def load(client_id=None, client_secret=None):
     if os.path.isfile(DEFAULT_CONFIG_FILE):
         configfile = DEFAULT_CONFIG_FILE
     else:

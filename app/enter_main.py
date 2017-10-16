@@ -6,12 +6,20 @@ import logging
 from framework.mic import Audio
 from framework.player import Player
 
+
+def directive_listener(directive_content):
+    print '*******directive content start*******'
+    print directive_content
+    print '*******directive content end*********'
+
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 audio = Audio()
 player = Player()
 dueros = DuerOS(player)
+dueros.register_directive_callback(directive_listener)
 
 audio.link(dueros)
 

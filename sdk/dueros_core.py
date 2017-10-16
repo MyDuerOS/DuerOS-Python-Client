@@ -27,7 +27,7 @@ from sdk.interface.speaker import Speaker
 from sdk.interface.speech_recognizer import SpeechRecognizer
 from sdk.interface.speech_synthesizer import SpeechSynthesizer
 from sdk.interface.system import System
-import sdk.config
+import sdk.configurate
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class DuerOS(object):
 
         self.requests = requests.Session()
 
-        self._config = sdk.config.load()
+        self._config = sdk.configurate.load()
 
         self._config['host_url'] = 'dueros-h2.baidu.com'
 
@@ -463,7 +463,7 @@ class DuerOS(object):
         self._config['expiry'] = expiry_time.strftime(date_format)
         logger.debug(json.dumps(self._config, indent=4))
 
-        sdk.config.save(self._config, configfile=self._configfile)
+        sdk.configurate.save(self._config, configfile=self._configfile)
 
         return self._config['access_token']
 

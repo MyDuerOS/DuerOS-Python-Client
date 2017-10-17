@@ -16,13 +16,15 @@ except ImportError:
 
 import logging
 
+from framework.player import Player
+
 logger = logging.getLogger(__file__)
 
 
 class SnowBoy(object):
     def __init__(self):
         from app.snowboy import snowboydecoder
-        model = 'dueros/snowboy/xiaoduxiaodu.pmdl'
+        model = 'snowboy/xiaoduxiaodu.pmdl'
         self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5, audio_gain=1)
 
     def feed_data(self, data):
@@ -91,11 +93,10 @@ def main():
 
     logging.basicConfig(level=logging.DEBUG)
 
-    config = None if len(sys.argv) < 2 else sys.argv[1]
-
     audio = Audio()
     kws = KWS()
-    dueros = DuerOS(config)
+    player = Player()
+    dueros = DuerOS(player)
     snowboy = SnowBoy()
 
     audio.link(kws)

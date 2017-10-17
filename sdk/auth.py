@@ -9,7 +9,7 @@ import requests
 import datetime
 import click
 
-import configurate
+import sdk.configurate as configurate
 
 # 开发者默认注册信息
 CLIENT_ID = "5GFgMRfHOhIvI0B8AZB78nt676FeWA9n"

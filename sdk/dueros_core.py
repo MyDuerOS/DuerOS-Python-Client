@@ -360,7 +360,9 @@ class DuerOS(object):
 
     def _handle_directive(self, directive):
         # print '============directive:', directive
-        self.directive_callback(directive)
+        if 'directive_callback' in dir(self):
+            self.directive_callback(directive)
+
         logger.debug(json.dumps(directive, indent=4))
         try:
             namespace = directive['header']['namespace']

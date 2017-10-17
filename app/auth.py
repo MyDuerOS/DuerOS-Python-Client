@@ -5,6 +5,12 @@ import sdk.auth
 CLIENT_ID = 'XXXXX'
 CLIENT_SECRET = 'XXXXXX'
 
+
 # sdk.auth.auth_request(CLIENT_ID, CLIENT_SECRET)
 
-sdk.auth.auth_request()
+def main():
+    sdk.auth.auth_request()
+
+
+if __name__ == '__main__':
+    main()

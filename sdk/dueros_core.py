@@ -106,15 +106,15 @@ class DuerOS(object):
 
         self.requests = requests.Session()
 
-        self._config = sdk.configurate.load()
+        self.__config = sdk.configurate.load()
 
-        self._config['host_url'] = 'dueros-h2.baidu.com'
+        self.__config['host_url'] = 'dueros-h2.baidu.com'
 
-        self._config['api'] = 'dcs/v1'
-        self._config['refresh_url'] = 'https://openapi.baidu.com/oauth/2.0/token'
+        self.__config['api'] = 'dcs/v1'
+        self.__config['refresh_url'] = 'https://openapi.baidu.com/oauth/2.0/token'
 
         self.last_activity = datetime.datetime.utcnow()
-        self._ping_time = None
+        self.__ping_time = None
 
         self.directive_listener=None
 
@@ -184,13 +184,13 @@ class DuerOS(object):
         run方法实现
         :return:
         '''
-        conn = hyper.HTTP20Connection('{}:443'.format(self._config['host_url']), force_proto='h2')
+        conn = hyper.HTTP20Connection('{}:443'.format(self.__config['host_url']), force_proto='h2')
 
         headers = {'authorization': 'Bearer {}'.format(self.token)}
-        if 'dueros-device-id' in self._config:
-            headers['dueros-device-id'] = self._config['dueros-device-id']
+        if 'dueros-device-id' in self.__config:
+            headers['dueros-device-id'] = self.__config['dueros-device-id']
 
-        downchannel_id = conn.request('GET', '/{}/directives'.format(self._config['api']), headers=headers)
+        downchannel_id = conn.request('GET', '/{}/directives'.format(self.__config['api']), headers=headers)
         downchannel_response = conn.get_response(downchannel_id)
 
         if downchannel_response.status != 200:
@@ -203,7 +203,7 @@ class DuerOS(object):
         eventchannel_boundary = 'baidu-voice-engine'
 
         # ping every 5 minutes (60 seconds early for latency) to maintain the connection
-        self._ping_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=240)
+        self.__ping_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=240)
 
         self.event_queue.queue.clear()
 
@@ -232,12 +232,12 @@ class DuerOS(object):
             headers = {
                 ':method': 'POST',
                 ':scheme': 'https',
-                ':path': '/{}/events'.format(self._config['api']),
+                ':path': '/{}/events'.format(self.__config['api']),
                 'authorization': 'Bearer {}'.format(self.token),
                 'content-type': 'multipart/form-data; boundary={}'.format(eventchannel_boundary)
             }
-            if 'dueros-device-id' in self._config:
-                headers['dueros-device-id'] = self._config['dueros-device-id']
+            if 'dueros-device-id' in self.__config:
+                headers['dueros-device-id'] = self.__config['dueros-device-id']
 
             stream_id = conn.putrequest(headers[':method'], headers[':path'])
             default_headers = (':method', ':scheme', ':authority', ':path')
@@ -464,7 +464,7 @@ class DuerOS(object):
         :param connection:链接句柄
         :return:
         '''
-        if datetime.datetime.utcnow() >= self._ping_time:
+        if datetime.datetime.utcnow() >= self.__ping_time:
             # ping_stream_id = connection.request('GET', '/ping',
             #                                     headers={'authorization': 'Bearer {}'.format(self.token)})
             # resp = connection.get_response(ping_stream_id)
@@ -477,7 +477,7 @@ class DuerOS(object):
             logger.debug('ping at {}'.format(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S %Y")))
 
             # ping every 5 minutes (60 seconds early for latency) to maintain the connection
-            self._ping_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=240)
+            self.__ping_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=240)
 
     @property
     def context(self):
@@ -495,20 +495,20 @@ class DuerOS(object):
         '''
         date_format = "%a %b %d %H:%M:%S %Y"
 
-        if 'access_token' in self._config:
-            if 'expiry' in self._config:
-                expiry = datetime.datetime.strptime(self._config['expiry'], date_format)
+        if 'access_token' in self.__config:
+            if 'expiry' in self.__config:
+                expiry = datetime.datetime.strptime(self.__config['expiry'], date_format)
                 # refresh 60 seconds early to avoid chance of using expired access_token
                 if (datetime.datetime.utcnow() - expiry) > datetime.timedelta(seconds=60):
                     logger.info("Refreshing access_token")
                 else:
-                    return self._config['access_token']
+                    return self.__config['access_token']
 
         payload = {
-            'client_id': self._config['client_id'],
-            'client_secret': self._config['client_secret'],
+            'client_id': self.__config['client_id'],
+            'client_secret': self.__config['client_secret'],
             'grant_type': 'refresh_token',
-            'refresh_token': self._config['refresh_token']
+            'refresh_token': self.__config['refresh_token']
         }
 
         response = None
@@ -516,7 +516,7 @@ class DuerOS(object):
         # try to request an access token 3 times
         for i in range(3):
             try:
-                response = self.requests.post(self._config['refresh_url'], data=payload)
+                response = self.requests.post(self.__config['refresh_url'], data=payload)
                 if response.status_code != 200:
                     logger.warning(response.text)
                 else:
@@ -529,15 +529,15 @@ class DuerOS(object):
             raise ValueError("refresh token request returned {}".format(response.status))
 
         config = response.json()
-        self._config['access_token'] = config['access_token']
+        self.__config['access_token'] = config['access_token']
 
         expiry_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=config['expires_in'])
-        self._config['expiry'] = expiry_time.strftime(date_format)
-        logger.debug(json.dumps(self._config, indent=4))
+        self.__config['expiry'] = expiry_time.strftime(date_format)
+        logger.debug(json.dumps(self.__config, indent=4))
 
-        sdk.configurate.save(self._config, configfile=self._configfile)
+        sdk.configurate.save(self.__config, configfile=self._configfile)
 
-        return self._config['access_token']
+        return self.__config['access_token']
 
     def __namespace_convert(self, namespace):
         '''

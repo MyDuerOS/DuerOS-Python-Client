@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Hands-free DuerOS with respeaker using Snowboy to search keyword
+通过[小度小度]触发进入唤醒状态
 
 """
-
-import sys
 import threading
 import time
 
@@ -14,71 +12,142 @@ try:
 except ImportError:
     import queueg
 
-import logging
-
 from framework.player import Player
+from sdk.dueros_core import DuerOS
+from framework.mic import Audio
 
-logger = logging.getLogger(__file__)
+from app.snowboy import snowboydecoder
 
 
 class SnowBoy(object):
-    def __init__(self):
-        from app.snowboy import snowboydecoder
-        model = 'snowboy/xiaoduxiaodu.pmdl'
+    '''
+    基于SnowBoy的唤醒类
+    '''
+
+    def __init__(self, model):
+        '''
+        SnowBoy初始化
+        :param model:唤醒词训练模型
+        '''
+        self.calback = None
         self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5, audio_gain=1)
 
     def feed_data(self, data):
+        '''
+        唤醒引擎语音数据输入
+        :param data: 录音pcm数据流
+        :return:
+        '''
         self.detector.feed_data(data)
 
     def set_callback(self, callback):
-        self.__calback = callback
+        '''
+        唤醒状态回调
+        :param callback:唤醒状态回调函数
+        :return:
+        '''
+        if not callable(callback):
+            raise ValueError('注册回调失败[参数不可调用]！')
 
-    def run(self):
-        self.detector.start(self.__calback)
+        self.calback = callback
 
     def start(self):
-        thread = threading.Thread(target=self.run)
+        '''
+        唤醒引擎启动
+        :return:
+        '''
+        thread = threading.Thread(target=self.__run)
         thread.daemon = True
         thread.start()
 
     def stop(self):
+        '''
+        唤醒引擎关闭
+        :return:
+        '''
         self.detector.terminate()
 
+    def __run(self):
+        '''
+        唤醒检测线程实体
+        :return:
+        '''
+        self.detector.start(self.calback)
 
-class KWS(object):
+
+class WakeupEngine(object):
+    '''
+    唤醒引擎(平台无关)
+    '''
+
     def __init__(self):
         self.queue = queue.Queue()
 
         self.sinks = []
-        self._callback = None
+        self.callback = None
 
         self.done = False
 
     def set_wakeup_detector(self, detector):
-        self.wakeup_detector = detector
+        '''
+        设置唤醒引擎
+        :param detector:唤醒引擎（如SnowBoy）
+        :return:
+        '''
+        if hasattr(detector, 'feed_data') and callable(detector.feed_data):
+            self.wakeup_detector = detector
+        else:
+            raise ValueError('唤醒引擎设置失败[不存在可调用的feed_data方法]！')
 
     def put(self, data):
+        '''
+        录音数据缓存
+        :param data:录音pcm流
+        :return:
+        '''
         self.queue.put(data)
 
     def start(self):
+        '''
+        唤醒引擎启动
+        :return:
+        '''
         self.done = False
-        thread = threading.Thread(target=self.run)
+        thread = threading.Thread(target=self.__run)
         thread.daemon = True
         thread.start()
 
     def stop(self):
+        '''
+        唤醒引擎关闭
+        :return:
+        '''
         self.done = True
 
     def link(self, sink):
+        '''
+        连接DuerOS核心实现模块
+        :param sink:DuerOS核心实现模块
+        :return:
+        '''
         if hasattr(sink, 'put') and callable(sink.put):
             self.sinks.append(sink)
         else:
-            raise ValueError('Not implement put() method')
+            raise ValueError('link注册对象无put方法')
 
     def unlink(self, sink):
+        '''
+        移除DuerOS核心实现模块
+        :param sink: DuerOS核心实现模块
+        :return:
+        '''
         self.sinks.remove(sink)
 
-    def run(self):
+    def __run(self):
+        '''
+        唤醒引擎线程实体
+        :return:
+        '''
         while not self.done:
             chunk = self.queue.get()
             self.wakeup_detector.feed_data(chunk)
@@ -88,29 +157,36 @@ class KWS(object):
 
 
 def main():
-    from sdk.dueros_core import DuerOS
-    from framework.mic import Audio
-
-    logging.basicConfig(level=logging.DEBUG)
-
+    # 创建录音设备(平台相关)
     audio = Audio()
-    kws = KWS()
+    # 创建唤醒引擎
+    wakeup_engine = WakeupEngine()
+    # 创建播放器(平台相关)
     player = Player()
+    # 创建duerOS核心处理模块
     dueros = DuerOS(player)
-    snowboy = SnowBoy()
 
-    audio.link(kws)
-    kws.link(dueros)
-    kws.set_wakeup_detector(snowboy)
+    # [小度小度] SnowBoy唤醒引擎
+    model = 'app/snowboy/xiaoduxiaodu.pmdl'
+    # SnowBoy唤醒引擎实体
+    snowboy = SnowBoy(model)
+
+    audio.link(wakeup_engine)
+    wakeup_engine.link(dueros)
+    wakeup_engine.set_wakeup_detector(snowboy)
 
     def wakeup():
-        print '=============wake up is triggered!'
+        '''
+        唤醒回调
+        :return:
+        '''
+        print '[小度小度]已唤醒'
         dueros.listen()
 
     snowboy.set_callback(wakeup)
 
     dueros.start()
-    kws.start()
+    wakeup_engine.start()
     snowboy.start()
     audio.start()
 
@@ -121,7 +197,7 @@ def main():
             break
 
     dueros.stop()
-    kws.stop()
+    wakeup_engine.stop()
     audio.stop()
     snowboy.stop()
 

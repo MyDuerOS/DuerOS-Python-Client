@@ -31,6 +31,7 @@ from sdk.interface.speech_synthesizer import SpeechSynthesizer
 from sdk.interface.system import System
 import sdk.configurate
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -47,28 +48,28 @@ class DuerOSStateListner(object):
         监听状态回调
         :return:
         '''
-        logger.debug('[DuerOS状态]正在倾听..........')
+        logging.info('[DuerOS状态]正在倾听..........')
 
     def on_thinking(self):
         '''
         语义理解状态回调
         :return:
         '''
-        logger.debug('[DuerOS状态]正在思考.........')
+        logging.info('[DuerOS状态]正在思考.........')
 
     def on_speaking(self):
         '''
         播放状态回调
         :return:
         '''
-        logger.debug('[DuerOS状态]正在播放........')
+        logging.info('[DuerOS状态]正在播放........')
 
     def on_finished(self):
         '''
         处理结束状态回调
         :return:
         '''
-        logger.debug('[DuerOS状态]结束')
+        logging.info('[DuerOS状态]结束')
 
 
 class DuerOS(object):
@@ -115,6 +116,8 @@ class DuerOS(object):
         self.last_activity = datetime.datetime.utcnow()
         self._ping_time = None
 
+        self.directive_listener=None
+
     def set_directive_listener(self, listener):
         '''
         directive监听器设置
@@ -125,20 +128,6 @@ class DuerOS(object):
             self.directive_listener = listener
         else:
             raise ValueError('directive监听器注册失败[参数不可回调]！')
-
-    def set_state_listner(self, listner):
-        '''
-        DuerOS状态监听器设置
-        :param listner:DuerOS状态监听器
-        :return:
-        '''
-        if hasattr(listner, 'on_listening') \
-                and hasattr(listner, 'on_thinking') \
-                and hasattr(listner, 'on_speaking') \
-                and hasattr(listner, 'on_finished'):
-            self.state_listener = listner
-        else:
-            raise ValueError('DuerOS状态监听器注册失败[参数不可回调]！')
 
     def start(self):
         '''
@@ -317,7 +306,6 @@ class DuerOS(object):
         :param buffer:包含http body数据
         :return:
         '''
-        print '=============_read_response()'
         if boundary:
             endboundary = boundary + b"--"
         else:
@@ -443,7 +431,7 @@ class DuerOS(object):
         :param directive:
         :return:
         '''
-        if 'directive_callback' in dir(self):
+        if 'directive_listener' in dir(self):
             self.directive_listener(directive)
 
         logger.debug(json.dumps(directive, indent=4))

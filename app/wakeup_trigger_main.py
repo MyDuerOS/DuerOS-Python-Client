@@ -20,7 +20,7 @@ from framework.mic import Audio
 
 from app.snowboy import snowboydecoder
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 class SnowBoy(object):
@@ -160,52 +160,14 @@ class WakeupEngine(object):
                 sink.put(chunk)
 
 
-class DuerOSStateListner(object):
-    '''
-    DuerOS状态监听类
-    '''
-
-    def __init__(self):
-        pass
-
-    def on_listening(self):
-        '''
-        监听状态回调
-        :return:
-        '''
-        logging.info('[DuerOS状态]正在倾听..........')
-
-    def on_thinking(self):
-        '''
-        语义理解状态回调
-        :return:
-        '''
-        logging.info('[DuerOS状态]正在思考.........')
-
-    def on_speaking(self):
-        '''
-        播放状态回调
-        :return:
-        '''
-        logging.info('[DuerOS状态]正在播放........')
-
-    def on_finished(self):
-        '''
-        处理结束状态回调
-        :return:
-        '''
-        logging.info('[DuerOS状态]结束')
-
-
 def directive_listener(directive_content):
     '''
     云端下发directive监听器
     :param directive_content:云端下发directive内容
     :return:
     '''
-    logging.info('*******directive content start*******')
-    logging.info(directive_content)
-    logging.info('*******directive content end*********')
+    content = u'云端下发directive:%s' % (directive_content)
+    logging.info(content)
 
 
 def main():
@@ -218,8 +180,6 @@ def main():
     # 创建duerOS核心处理模块
     dueros = DuerOS(player)
     dueros.set_directive_listener(directive_listener)
-    dueros_status_listener = DuerOSStateListner()
-    dueros.set_state_listner(dueros_status_listener)
 
     # [小度小度] SnowBoy唤醒引擎
     model = 'app/snowboy/xiaoduxiaodu.pmdl'

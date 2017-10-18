@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+'''
+DuerOS服务核心模块
+'''
 
 import cgi
 import io
@@ -33,24 +35,56 @@ logger = logging.getLogger(__name__)
 
 
 class DuerOSStateListner(object):
+    '''
+    DuerOS状态监听类
+    '''
+
     def __init__(self):
         pass
 
     def on_listening(self):
-        logger.debug('on_listening')
+        '''
+        监听状态回调
+        :return:
+        '''
+        logger.debug('[DuerOS状态]正在倾听..........')
 
     def on_thinking(self):
-        logger.debug('on_thinking')
+        '''
+        语义理解状态回调
+        :return:
+        '''
+        logger.debug('[DuerOS状态]正在思考.........')
 
     def on_speaking(self):
-        logger.debug('on_speaking')
+        '''
+        播放状态回调
+        :return:
+        '''
+        logger.debug('[DuerOS状态]正在播放........')
 
     def on_finished(self):
-        logger.debug('on_finished')
+        '''
+        处理结束状态回调
+        :return:
+        '''
+        logger.debug('[DuerOS状态]结束')
 
 
 class DuerOS(object):
+    '''
+    DuerOS核心模块类，实现功能包括:
+        录音数据上传
+        本地状态上报
+        长链接建立与维护(Ping)
+        Directive下发
+    '''
+
     def __init__(self, player):
+        '''
+        类初始化
+        :param player:播放器
+        '''
         self.event_queue = queue.Queue()
         self.SpeechRecognizer = SpeechRecognizer(self)
         self.SpeechSynthesizer = SpeechSynthesizer(self, player)
@@ -81,13 +115,36 @@ class DuerOS(object):
         self.last_activity = datetime.datetime.utcnow()
         self._ping_time = None
 
-    def register_directive_callback(self, callback):
-        self.directive_callback = callback
+    def set_directive_listener(self, listener):
+        '''
+        directive监听器设置
+        :param listener: directive监听器
+        :return:
+        '''
+        if callable(listener):
+            self.directive_listener = listener
+        else:
+            raise ValueError('directive监听器注册失败[参数不可回调]！')
 
     def set_state_listner(self, listner):
-        self.state_listener = listner
+        '''
+        DuerOS状态监听器设置
+        :param listner:DuerOS状态监听器
+        :return:
+        '''
+        if hasattr(listner, 'on_listening') \
+                and hasattr(listner, 'on_thinking') \
+                and hasattr(listner, 'on_speaking') \
+                and hasattr(listner, 'on_finished'):
+            self.state_listener = listner
+        else:
+            raise ValueError('DuerOS状态监听器注册失败[参数不可回调]！')
 
     def start(self):
+        '''
+        DuerOS模块启动
+        :return:
+        '''
         self.done = False
 
         t = threading.Thread(target=self.run)
@@ -95,15 +152,30 @@ class DuerOS(object):
         t.start()
 
     def stop(self):
+        '''
+        DuerOS模块停止
+        :return:
+        '''
         self.done = True
 
     def send_event(self, event, listener=None, attachment=None):
+        '''
+        状态上报
+        :param event:上传状态
+        :param listener:VAD检测回调[云端识别语音输入结束]
+        :param attachment:录音数据
+        :return:
+        '''
         self.event_queue.put((event, listener, attachment))
 
     def run(self):
+        '''
+        DuerOS线程实体
+        :return:
+        '''
         while not self.done:
             try:
-                self._run()
+                self.__run()
             except AttributeError as e:
                 logger.exception(e)
                 continue
@@ -118,18 +190,19 @@ class DuerOS(object):
                 logging.exception(e)
                 continue
 
-    def _run(self):
+    def __run(self):
+        '''
+        run方法实现
+        :return:
+        '''
         conn = hyper.HTTP20Connection('{}:443'.format(self._config['host_url']), force_proto='h2')
 
         headers = {'authorization': 'Bearer {}'.format(self.token)}
         if 'dueros-device-id' in self._config:
-            print '=================run::dueros-device-id={}'.format(self._config['dueros-device-id'])
             headers['dueros-device-id'] = self._config['dueros-device-id']
 
         downchannel_id = conn.request('GET', '/{}/directives'.format(self._config['api']), headers=headers)
         downchannel_response = conn.get_response(downchannel_id)
-
-        print '===========downchannel_response.status=', downchannel_response.status
 
         if downchannel_response.status != 200:
             raise ValueError("/directive requests returned {}".format(downchannel_response.status))
@@ -161,11 +234,10 @@ class DuerOS(object):
 
             while downchannel.data:
                 framebytes = downchannel._read_one_frame()
-                self._read_response(
-                    framebytes, downchannel_boundary, downchannel_buffer)
+                self.__read_response(framebytes, downchannel_boundary, downchannel_buffer)
 
             if event is None:
-                self._ping(conn)
+                self.__ping(conn)
                 continue
 
             headers = {
@@ -215,7 +287,7 @@ class DuerOS(object):
 
                     while downchannel.data:
                         framebytes = downchannel._read_one_frame()
-                        self._read_response(framebytes, downchannel_boundary, downchannel_buffer)
+                        self.__read_response(framebytes, downchannel_boundary, downchannel_buffer)
 
                 self.last_activity = datetime.datetime.utcnow()
 
@@ -227,7 +299,7 @@ class DuerOS(object):
             logger.info("status code: %s", resp.status)
 
             if resp.status == 200:
-                self._read_response(resp)
+                self.__read_response(resp)
             elif resp.status == 204:
                 pass
             else:
@@ -237,7 +309,14 @@ class DuerOS(object):
             if listener and callable(listener):
                 listener()
 
-    def _read_response(self, response, boundary=None, buffer=None):
+    def __read_response(self, response, boundary=None, buffer=None):
+        '''
+        云端回复数据读取解析
+        :param response:包含http header信息
+        :param boundary:multipart boundary
+        :param buffer:包含http body数据
+        :return:
+        '''
         print '=============_read_response()'
         if boundary:
             endboundary = boundary + b"--"
@@ -356,12 +435,16 @@ class DuerOS(object):
                 buffer.write(b"\r\n")
 
         for directive in directives:
-            self._handle_directive(directive)
+            self.__handle_directive(directive)
 
-    def _handle_directive(self, directive):
-        # print '============directive:', directive
+    def __handle_directive(self, directive):
+        '''
+        directive处理
+        :param directive:
+        :return:
+        '''
         if 'directive_callback' in dir(self):
-            self.directive_callback(directive)
+            self.directive_listener(directive)
 
         logger.debug(json.dumps(directive, indent=4))
         try:
@@ -387,7 +470,12 @@ class DuerOS(object):
         except Exception as e:
             logger.exception(e)
 
-    def _ping(self, connection):
+    def __ping(self, connection):
+        '''
+        长链接维护,ping操作
+        :param connection:链接句柄
+        :return:
+        '''
         if datetime.datetime.utcnow() >= self._ping_time:
             # ping_stream_id = connection.request('GET', '/ping',
             #                                     headers={'authorization': 'Bearer {}'.format(self.token)})
@@ -405,12 +493,18 @@ class DuerOS(object):
 
     @property
     def context(self):
-        # return [self.SpeechRecognizer.context, self.SpeechSynthesizer.context,
-        #                    self.AudioPlayer.context, self.Speaker.context, self.Alerts.context]
+        '''
+        模块当前上下文(当前状态集合)
+        :return:
+        '''
         return [self.SpeechSynthesizer.context, self.Speaker.context, self.AudioPlayer.context, self.Alerts.context]
 
     @property
     def token(self):
+        '''
+        token获取
+        :return:
+        '''
         date_format = "%a %b %d %H:%M:%S %Y"
 
         if 'access_token' in self._config:
@@ -458,6 +552,11 @@ class DuerOS(object):
         return self._config['access_token']
 
     def __namespace_convert(self, namespace):
+        '''
+        将namespace字段内容与interface中的模块进行一一对应
+        :param namespace: directive中namespace字段
+        :return:
+        '''
         if namespace == 'ai.dueros.device_interface.voice_output':
             return 'SpeechSynthesizer'
         elif namespace == 'ai.dueros.device_interface.voice_input':
@@ -472,43 +571,3 @@ class DuerOS(object):
             return 'System'
         else:
             return None
-
-    def __enter__(self):
-        self.start()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop()
-
-    def main(self):
-        import sys
-
-        logging.basicConfig(level=logging.DEBUG)
-
-        config = None if len(sys.argv) < 2 else sys.argv[1]
-
-        if not self._mic:
-            print '录音mic未初始化！'
-            exit()
-
-        audio = self._mic
-        dueros = DuerOS(config)
-
-        audio.link(dueros)
-
-        dueros.start()
-        audio.start()
-
-        while True:
-            try:
-                try:
-                    input('press ENTER to talk\n')
-                except SyntaxError:
-                    pass
-
-                dueros.listen()
-            except KeyboardInterrupt:
-                break
-
-        dueros.stop()
-        audio.stop()

@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
+'''
+认证授权模块
+'''
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import time
 import json
-import uuid
 import requests
 import datetime
-import click
 
 import sdk.configurate as configurate
 
@@ -15,19 +16,38 @@ import sdk.configurate as configurate
 CLIENT_ID = "5GFgMRfHOhIvI0B8AZB78nt676FeWA9n"
 CLIENT_SECRET = "eq2eCNfbtOrGwdlA4vB1N1EaiwjBMu7i"
 
+# 百度token服务器url
+TOKEN_URL = 'https://openapi.baidu.com/oauth/2.0/token'
+# 百度oauth服务器url
+OAUTH_URL = 'https://openapi.baidu.com/oauth/2.0/authorize'
+
 
 class MainHandler(tornado.web.RequestHandler):
+    '''
+    Tornado　webServer请求处理类
+    '''
+
     def initialize(self, output, client_id, client_secret):
+        '''
+        处理类初始化
+        :param output:配置文件保存地址
+        :param client_id: 开发者注册信息
+        :param client_secret: 开发者注册信息
+        :return:
+        '''
         self.config = configurate.load(client_id, client_secret)
         self.output = output
 
-        self.token_url = 'https://openapi.baidu.com/oauth/2.0/token'
-        self.oauth_url = 'https://openapi.baidu.com/oauth/2.0/authorize'
+        self.token_url = TOKEN_URL
+        self.oauth_url = OAUTH_URL
 
     @tornado.web.asynchronous
     def get(self):
+        '''
+        get 请求处理
+        :return:
+        '''
         redirect_uri = self.request.protocol + "://" + self.request.host + "/authresponse"
-        print '================request.path=', self.request.path
         if self.request.path == '/authresponse':
             code = self.get_argument("code")
             payload = {
@@ -49,7 +69,7 @@ class MainHandler(tornado.web.RequestHandler):
                 self.config['expiry'] = expiry_time.strftime(date_format)
                 self.config['access_token'] = config['access_token']
 
-            print(json.dumps(self.config, indent=4))
+            # print(json.dumps(self.config, indent=4))
             configurate.save(self.config, configfile=self.output)
 
             self.write('Succeed to login DuerOS Voice Service')
@@ -65,11 +85,16 @@ class MainHandler(tornado.web.RequestHandler):
 
             req = requests.Request('GET', self.oauth_url, params=payload)
             p = req.prepare()
-            print '============redirect url=', p.url
             self.redirect(p.url)
 
 
 def login(client_id, client_secret):
+    '''
+    初始化Tornado　web server
+    :param client_id: 开发者信息
+    :param client_secret: 开发者信息
+    :return:
+    '''
     application = tornado.web.Application([(r".*", MainHandler,
                                             dict(output=configurate.DEFAULT_CONFIG_FILE, client_id=client_id,
                                                  client_secret=client_secret))])
@@ -80,6 +105,12 @@ def login(client_id, client_secret):
 
 
 def auth_request(client_id=CLIENT_ID, client_secret=CLIENT_SECRET):
+    '''
+    发起认证
+    :param client_id:开发者注册信息
+    :param client_secret: 开发者注册信息
+    :return:
+    '''
     try:
         import webbrowser
     except ImportError:

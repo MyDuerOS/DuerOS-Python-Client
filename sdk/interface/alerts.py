@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-"""http://open.duer.baidu.com/doc/dueros-conversational-service/device-interface/alerts_markdown"""
+"""
+Alert模块
+参考：http://open.duer.baidu.com/doc/dueros-conversational-service/device-interface/alerts_markdown
+"""
 
 import os
 import datetime
@@ -10,9 +13,17 @@ import uuid
 
 
 class Alerts(object):
+    '''
+    Alert类
+    '''
     STATES = {'IDLE', 'FOREGROUND', 'BACKGROUND'}
 
     def __init__(self, dueros, player):
+        '''
+        类初始化
+        :param dueros:DuerOS核心处理模块
+        :param player: 播放器
+        '''
         self.namespace = 'ai.dueros.device_interface.alerts'
         self.dueros = dueros
         self.player = player
@@ -28,14 +39,14 @@ class Alerts(object):
 
     def stop(self):
         """
-        Stop all active alerts
+        停止所有激活的Alert
         """
         for token in self.active_alerts.keys():
             self.AlertStopped(token)
 
         self.active_alerts = {}
 
-    def _start_alert(self, token):
+    def __start_alert(self, token):
         if token in self.all_alerts:
             self.AlertStarted(token)
 
@@ -69,7 +80,7 @@ class Alerts(object):
         self.all_alerts[token] = payload
 
         interval = scheduled_time - datetime.datetime.now(scheduled_time.tzinfo)
-        Timer(interval.seconds, self._start_alert, (token,)).start()
+        Timer(interval.seconds, self.__start_alert, (token,)).start()
 
         self.SetAlertSucceeded(token)
 

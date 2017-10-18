@@ -87,20 +87,20 @@ class DuerOS(object):
         :param player:播放器
         '''
         self.event_queue = queue.Queue()
-        self.SpeechRecognizer = SpeechRecognizer(self)
-        self.SpeechSynthesizer = SpeechSynthesizer(self, player)
-        self.AudioPlayer = AudioPlayer(self, player)
-        self.Speaker = Speaker(self)
-        self.Alerts = Alerts(self, player)
-        self.System = System(self)
+        self.speech_recognizer = SpeechRecognizer(self)
+        self.speech_synthesizer = SpeechSynthesizer(self, player)
+        self.audio_player = AudioPlayer(self, player)
+        self.speaker = Speaker(self)
+        self.alerts = Alerts(self, player)
+        self.system = System(self)
 
         self.state_listener = DuerOSStateListner()
 
         # handle audio to speech recognizer
-        self.put = self.SpeechRecognizer.put
+        self.put = self.speech_recognizer.put
 
         # listen() will trigger SpeechRecognizer's Recognize event
-        self.listen = self.SpeechRecognizer.Recognize
+        self.listen = self.speech_recognizer.Recognize
 
         self.done = False
 
@@ -116,7 +116,7 @@ class DuerOS(object):
         self.last_activity = datetime.datetime.utcnow()
         self.__ping_time = None
 
-        self.directive_listener=None
+        self.directive_listener = None
 
     def set_directive_listener(self, listener):
         '''
@@ -207,7 +207,7 @@ class DuerOS(object):
 
         self.event_queue.queue.clear()
 
-        self.System.SynchronizeState()
+        self.system.SynchronizeState()
 
         while not self.done:
             # logger.info("Waiting for event to send to AVS")
@@ -485,7 +485,7 @@ class DuerOS(object):
         模块当前上下文(当前状态集合)
         :return:
         '''
-        return [self.SpeechSynthesizer.context, self.Speaker.context, self.AudioPlayer.context, self.Alerts.context]
+        return [self.speech_synthesizer.context, self.speaker.context, self.audio_player.context, self.alerts.context]
 
     @property
     def token(self):
@@ -546,16 +546,16 @@ class DuerOS(object):
         :return:
         '''
         if namespace == 'ai.dueros.device_interface.voice_output':
-            return 'SpeechSynthesizer'
+            return 'speech_synthesizer'
         elif namespace == 'ai.dueros.device_interface.voice_input':
-            return 'SpeechRecognizer'
+            return 'speech_recognizer'
         elif namespace == 'ai.dueros.device_interface.alerts':
-            return 'Alerts'
+            return 'alerts'
         elif namespace == 'ai.dueros.device_interface.audio_player':
-            return 'AudioPlayer'
+            return 'audio_player'
         elif namespace == 'ai.dueros.device_interface.speaker_controller':
-            return 'Speaker'
+            return 'speaker'
         elif namespace == 'ai.dueros.device_interface.system':
-            return 'System'
+            return 'system'
         else:
             return None

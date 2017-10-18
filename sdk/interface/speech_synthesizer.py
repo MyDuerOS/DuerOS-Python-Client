@@ -45,7 +45,7 @@ class SpeechSynthesizer(object):
         # directive from dueros may not have the dialogRequestId
         if 'dialogRequestId' in directive['header']:
             dialog_request_id = directive['header']['dialogRequestId']
-            if self.dueros.SpeechRecognizer.dialog_request_id != dialog_request_id:
+            if self.dueros.speech_recognizer.dialog_request_id != dialog_request_id:
                 return
 
         self.token = directive['payload']['token']

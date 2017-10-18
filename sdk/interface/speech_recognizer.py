@@ -58,14 +58,14 @@ class SpeechRecognizer(object):
         def on_finished():
             self.dueros.state_listener.on_finished()
 
-            if self.dueros.AudioPlayer.state == 'PAUSED':
-                self.dueros.AudioPlayer.resume()
+            if self.dueros.audio_player.state == 'PAUSED':
+                self.dueros.audio_player.resume()
 
         # Stop playing if Xiaoduxiaodu is speaking or AudioPlayer is playing
-        if self.dueros.SpeechSynthesizer.state == 'PLAYING':
-            self.dueros.SpeechSynthesizer.stop()
-        elif self.dueros.AudioPlayer.state == 'PLAYING':
-            self.dueros.AudioPlayer.pause()
+        if self.dueros.speech_synthesizer.state == 'PLAYING':
+            self.dueros.speech_synthesizer.stop()
+        elif self.dueros.audio_player.state == 'PLAYING':
+            self.dueros.audio_player.pause()
 
         self.dialog_request_id = dialog if dialog else uuid.uuid4().hex
 

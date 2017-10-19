@@ -100,7 +100,7 @@ class DuerOS(object):
         self.put = self.speech_recognizer.put
 
         # listen() will trigger SpeechRecognizer's Recognize event
-        self.listen = self.speech_recognizer.Recognize
+        self.listen = self.speech_recognizer.recognize
 
         self.done = False
 
@@ -207,7 +207,7 @@ class DuerOS(object):
 
         self.event_queue.queue.clear()
 
-        self.system.SynchronizeState()
+        self.system.synchronize_state()
 
         while not self.done:
             # logger.info("Waiting for event to send to AVS")
@@ -443,6 +443,7 @@ class DuerOS(object):
                 return
 
             name = directive['header']['name']
+            name = self.__name_convert(name)
             if hasattr(self, namespace):
                 interface = getattr(self, namespace)
                 directive_func = getattr(interface, name, None)
@@ -559,3 +560,48 @@ class DuerOS(object):
             return 'system'
         else:
             return None
+
+    def __name_convert(self, name):
+        '''
+        将name字段内容与interface中的模块方法进行一一对应
+        :param name: directive中name字段
+        :return:
+        '''
+        # 语音输入模块[speech_recognizer]
+        if name == 'StopListen':
+            return 'stop_listen'
+        elif name == 'Listen':
+            return 'listen'
+        # 语音输出模块[speech_synthesizer]
+        elif name == 'Speak':
+            return 'speak'
+        # 扬声器控制模块[speaker]
+        elif name == 'SetVolume':
+            return 'set_volume'
+        elif name == 'AdjustVolume':
+            return 'adjust_volume'
+        elif name == 'SetMute':
+            return 'set_mute'
+        # 音频播放器模块[audio_player]
+        elif name == 'Play':
+            return 'play'
+        elif name == 'Stop':
+            return 'stop'
+        elif name == 'ClearQueue':
+            return 'clear_queue'
+        # 播放控制[playback_controller]
+        # 闹钟模块[alerts]
+        elif name == 'SetAlert':
+            return 'set_alert'
+        elif name == 'DeleteAlert':
+            return 'delete_alert'
+        # 屏幕展示模块[screen_display]
+        elif name == 'HtmlView':
+            return 'html_view'
+        # 系统模块
+        elif name == 'ResetUserInactivity':
+            return 'reset_user_inactivity'
+        elif name == 'SetEndpoint':
+            return 'set_end_point'
+        elif name == 'ThrowException':
+            return 'throw_exception'

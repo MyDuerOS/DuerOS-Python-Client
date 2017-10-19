@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+'''
+语音输出模块(TTS)
+参考:http://open.duer.baidu.com/doc/dueros-conversational-service/device-interface/voice-output_markdown
+'''
 import os
 import tempfile
 import threading
@@ -5,20 +10,32 @@ import uuid
 
 
 class SpeechSynthesizer(object):
+    '''
+    语音输出模块功能类
+    '''
     STATES = {'PLAYING', 'FINISHED'}
 
     def __init__(self, dueros, player):
-        self.namespace='ai.dueros.device_interface.voice_output'
+        '''
+        类初始化
+        :param dueros:DuerOS核心模块实例
+        :param player: 播放器实例
+        '''
+        self.namespace = 'ai.dueros.device_interface.voice_output'
         self.dueros = dueros
         self.token = ''
         self.state = 'FINISHED'
         self.finished = threading.Event()
 
         self.player = player
-        self.player.add_callback('eos', self.SpeechFinished)
-        self.player.add_callback('error', self.SpeechFinished)
+        self.player.add_callback('eos', self.__speech_finished)
+        self.player.add_callback('error', self.__speech_finished)
 
     def stop(self):
+        '''
+        停止播放
+        :return:
+        '''
         self.finished.set()
         self.player.stop()
         self.state = 'FINISHED'
@@ -41,7 +58,12 @@ class SpeechSynthesizer(object):
     # Content-Type: application/octet-stream
     # Content-ID: {{Audio Item CID}}
     # {{BINARY AUDIO ATTACHMENT}}
-    def Speak(self, directive):
+    def speak(self, directive):
+        '''
+        播放TTS(云端directive　name方法)
+        :param directive: 云端下发directive
+        :return:
+        '''
         # directive from dueros may not have the dialogRequestId
         if 'dialogRequestId' in directive['header']:
             dialog_request_id = directive['header']['dialogRequestId']
@@ -56,7 +78,7 @@ class SpeechSynthesizer(object):
                 self.finished.clear()
                 # os.system('mpv "{}"'.format(mp3_file))
                 self.player.play('file://{}'.format(mp3_file))
-                self.SpeechStarted()
+                self.__speech_started()
 
                 self.dueros.state_listener.on_speaking()
 
@@ -65,7 +87,11 @@ class SpeechSynthesizer(object):
 
                 os.system('rm -rf "{}"'.format(mp3_file))
 
-    def SpeechStarted(self):
+    def __speech_started(self):
+        '''
+        speech开始状态上报
+        :return:
+        '''
         self.state = 'PLAYING'
         event = {
             "header": {
@@ -79,7 +105,7 @@ class SpeechSynthesizer(object):
         }
         self.dueros.send_event(event)
 
-    def SpeechFinished(self):
+    def __speech_finished(self):
         self.dueros.state_listener.on_finished()
 
         self.finished.set()
@@ -98,6 +124,10 @@ class SpeechSynthesizer(object):
 
     @property
     def context(self):
+        '''
+        获取模块上下文(模块状态)
+        :return:
+        '''
         offset = self.player.position if self.state == 'PLAYING' else 0
 
         return {

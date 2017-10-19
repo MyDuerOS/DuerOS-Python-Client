@@ -42,33 +42,16 @@ class Alerts(object):
         停止所有激活的Alert
         """
         for token in self.active_alerts.keys():
-            self.AlertStopped(token)
+            self.__alert_stopped(token)
 
         self.active_alerts = {}
 
-    def __start_alert(self, token):
-        if token in self.all_alerts:
-            self.AlertStarted(token)
-
-            # TODO: repeat play alarm until user stops it or timeout
-            self.player.play(self.alarm_uri)
-
-    # {
-    #     "directive": {
-    #         "header": {
-    #             "namespace": "Alerts",
-    #             "name": "SetAlert",
-    #             "messageId": "{{STRING}}",
-    #             "dialogRequestId": "{{STRING}}"
-    #         },
-    #         "payload": {
-    #             "token": "{{STRING}}",
-    #             "type": "{{STRING}}",
-    #             "scheduledTime": "2017-08-07T09:02:58+0000",
-    #         }
-    #     }
-    # }
-    def SetAlert(self, directive):
+    def set_alert(self, directive):
+        '''
+        设置闹钟(云端directive　name方法)
+        :param directive:云端下发的directive
+        :return:
+        '''
         payload = directive['payload']
         token = payload['token']
         scheduled_time = dateutil.parser.parse(payload['scheduledTime'])
@@ -82,9 +65,59 @@ class Alerts(object):
         interval = scheduled_time - datetime.datetime.now(scheduled_time.tzinfo)
         Timer(interval.seconds, self.__start_alert, (token,)).start()
 
-        self.SetAlertSucceeded(token)
+        self.__set_alert_succeeded(token)
 
-    def SetAlertSucceeded(self, token):
+    def delete_alert(self, directive):
+        '''
+        删除闹钟(云端directive　name方法)
+        :param directive: 云端下发的directive
+        :return:
+        '''
+        token = directive['payload']['token']
+
+        if token in self.active_alerts:
+            self.__alert_stopped(token)
+
+        if token in self.all_alerts:
+            del self.all_alerts[token]
+
+        self.__delete_alert_succeeded(token)
+
+        def __start_alert(self, token):
+            '''
+            开始响铃
+            :param self:
+            :param token:
+            :return:
+            '''
+            if token in self.all_alerts:
+                self.__alert_started(token)
+
+                # TODO: repeat play alarm until user stops it or timeout
+                self.player.play(self.alarm_uri)
+
+                # {
+                #     "directive": {
+                #         "header": {
+                #             "namespace": "Alerts",
+                #             "name": "SetAlert",
+                #             "messageId": "{{STRING}}",
+                #             "dialogRequestId": "{{STRING}}"
+                #         },
+                #         "payload": {
+                #             "token": "{{STRING}}",
+                #             "type": "{{STRING}}",
+                #             "scheduledTime": "2017-08-07T09:02:58+0000",
+                #         }
+                #     }
+                # }
+
+    def __set_alert_succeeded(self, token):
+        '''
+        闹铃设置成功事件上报
+        :param token:
+        :return:
+        '''
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -98,7 +131,12 @@ class Alerts(object):
 
         self.dueros.send_event(event)
 
-    def SetAlertFailed(self, token):
+    def __set_alert_failed(self, token):
+        '''
+        闹铃设置失败事件上报
+        :param token:
+        :return:
+        '''
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -125,18 +163,13 @@ class Alerts(object):
     #         }
     #     }
     # }
-    def DeleteAlert(self, directive):
-        token = directive['payload']['token']
 
-        if token in self.active_alerts:
-            self.AlertStopped(token)
-
-        if token in self.all_alerts:
-            del self.all_alerts[token]
-
-        self.DeleteAlertSucceeded(token)
-
-    def DeleteAlertSucceeded(self, token):
+    def __delete_alert_succeeded(self, token):
+        '''
+        删除闹铃成功事件上报
+        :param token:
+        :return:
+        '''
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -150,7 +183,12 @@ class Alerts(object):
 
         self.dueros.send_event(event)
 
-    def DeleteAlertFailed(self, token):
+    def __delete_alert_failed(self, token):
+        '''
+        删除闹铃失败事件上传
+        :param token:
+        :return:
+        '''
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -164,7 +202,12 @@ class Alerts(object):
 
         self.dueros.send_event(event)
 
-    def AlertStarted(self, token):
+    def __alert_started(self, token):
+        '''
+        响铃开始事件上报
+        :param token:
+        :return:
+        '''
         self.active_alerts[token] = self.all_alerts[token]
 
         event = {
@@ -180,7 +223,12 @@ class Alerts(object):
 
         self.dueros.send_event(event)
 
-    def AlertStopped(self, token):
+    def __alert_stopped(self, token):
+        '''
+        响铃结束事件上报
+        :param token:
+        :return:
+        '''
         if token in self.active_alerts:
             del self.active_alerts[token]
 
@@ -200,7 +248,12 @@ class Alerts(object):
 
         self.dueros.send_event(event)
 
-    def AlertEnteredForeground(self, token):
+    def __alert_entered_foreground(self, token):
+        '''
+        响铃进入前台事件上报
+        :param token:
+        :return:
+        '''
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -214,7 +267,12 @@ class Alerts(object):
 
         self.dueros.send_event(event)
 
-    def AlertEnteredBackground(self, token):
+    def __alert_entered_background(self, token):
+        '''
+        响铃进入后台事件上报
+        :param token:
+        :return:
+        '''
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -230,6 +288,10 @@ class Alerts(object):
 
     @property
     def context(self):
+        '''
+        获取模块上下文(模块状态)
+        :return:
+        '''
         return {
             "header": {
                 "namespace": self.namespace,

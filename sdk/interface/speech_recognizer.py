@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-"""http://open.duer.baidu.com/doc/dueros-conversational-service/device-interface/voice-input_markdown"""
+"""
+语音识别功能模块(语音输入)
+参考：http://open.duer.baidu.com/doc/dueros-conversational-service/device-interface/voice-input_markdown
+"""
 
 import logging
 import uuid
@@ -14,13 +17,20 @@ logger = logging.getLogger('SpeechRecognizer')
 
 
 class SpeechRecognizer(object):
+    '''
+    语音识别类(语音输入)
+    '''
     STATES = {'IDLE', 'RECOGNIZING', 'BUSY', 'EXPECTING SPEECH'}
     PROFILES = {'CLOSE_TALK', 'NEAR_FIELD', 'FAR_FIELD'}
     PRESS_AND_HOLD = {'type': 'PRESS_AND_HOLD', 'payload': {}}
     TAP = {'type': 'TAP', 'payload': {}}
 
     def __init__(self, dueros):
-        self.namespace='ai.dueros.device_interface.voice_input'
+        '''
+        类初始化
+        :param dueros:DuerOS核心实现模块实例
+        '''
+        self.namespace = 'ai.dueros.device_interface.voice_input'
         self.dueros = dueros
         self.profile = 'NEAR_FIELD'
 
@@ -31,19 +41,18 @@ class SpeechRecognizer(object):
 
     def put(self, audio):
         """
-        Put audio into queue when listening
+        语音pcm输入
         :param audio: S16_LE format, sample rate 16000 bps audio data
         :return: None
         """
         if self.listening:
             self.audio_queue.put(audio)
 
-    def Recognize(self, dialog=None, initiator=None, timeout=10000):
+    def recognize(self, dialog=None, timeout=10000):
         """
-        recognize
-        :param dialog:
-        :param initiator:
-        :param timeout:
+        语音识别
+        :param dialog:会话ID
+        :param timeout:超时时间(单位毫秒)
         :return:
         """
 
@@ -69,10 +78,6 @@ class SpeechRecognizer(object):
 
         self.dialog_request_id = dialog if dialog else uuid.uuid4().hex
 
-        # TODO: set initiator properly
-        if initiator is None:
-            initiator = self.TAP
-
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -83,7 +88,6 @@ class SpeechRecognizer(object):
             "payload": {
                 "profile": self.profile,
                 "format": "AUDIO_L16_RATE_16000_CHANNELS_1",
-                'initiator': initiator
             }
         }
 
@@ -115,7 +119,12 @@ class SpeechRecognizer(object):
     #         }
     #     }
     # }
-    def StopListen(self, directive):
+    def stop_listen(self, directive):
+        '''
+        停止录音监听(云端directive　name方法)
+        :param directive: 云端下发的directive
+        :return:
+        '''
         self.listening = False
         logger.info('StopCapture')
 
@@ -133,17 +142,22 @@ class SpeechRecognizer(object):
     #     }
     #   }
     # }
-    def Listen(self, directive):
+    def listen(self, directive):
+        '''
+        启动录音监听(云端directive name方法)
+        :param directive: 云端下发的directive
+        :return:
+        '''
         dialog = directive['header']['dialogRequestId']
         timeout = directive['payload']['timeoutInMilliseconds']
 
-        initiator = None
-        if 'initiator' in directive['payload']:
-            initiator = directive['payload']['initiator']
+        self.recognize(dialog=dialog, timeout=timeout)
 
-        self.Recognize(dialog=dialog, initiator=initiator, timeout=timeout)
-
-    def ExpectSpeechTimedOut(self):
+    def expect_speech_timeout(self):
+        '''
+        超时时间上报
+        :return:
+        '''
         event = {
             "header": {
                 "namespace": self.namespace,
@@ -156,6 +170,10 @@ class SpeechRecognizer(object):
 
     @property
     def context(self):
+        '''
+        获取模块上下文(模块状态)
+        :return:
+        '''
         return {
             "header": {
                 "namespace": self.namespace,

@@ -36,7 +36,7 @@ def main():
     dueros.start()
     audio.start()
 
-    prompt_tone_player = PromptTone()
+    prompt_tone_player = PromptTone(player)
 
     while True:
         try:

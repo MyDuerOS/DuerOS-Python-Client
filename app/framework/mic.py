@@ -10,7 +10,7 @@ class Audio(object):
     录音类(基于pyaudio)
     '''
 
-    def __init__(self, rate=16000, frames_size=None, channels=None, device_index=None):
+    def __init__(self, rate=16000, frames_size=None, channels=None, device_index=2):
         '''
         录音类初始化
         :param rate:采样率

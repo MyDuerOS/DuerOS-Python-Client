@@ -8,8 +8,8 @@ class PromptTone(object):
     提示音播放类(用于唤醒态提示)
     '''
 
-    def __init__(self):
-        self.player = Player()
+    def __init__(self, player):
+        self.player = player
         resource = os.path.realpath(os.path.join(os.path.dirname(__file__), '../resources/du.mp3'))
         self.resource_uri = 'file://{}'.format(resource)
 

@@ -13,6 +13,9 @@ try:
 except ImportError:
     import queue
 
+import sdk.sdk_config as sdk_config
+
+logging.basicConfig(level=sdk_config.LOGGER_LEVEL)
 logger = logging.getLogger('SpeechRecognizer')
 
 

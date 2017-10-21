@@ -2,6 +2,9 @@
 import pyaudio
 import logging
 
+import app.app_config as app_config
+
+logging.basicConfig(level=app_config.LOGGER_LEVEL)
 logger = logging.getLogger(__file__)
 
 
@@ -98,5 +101,3 @@ class Audio(object):
         for sink in self.sinks:
             sink.put(in_data)
         return None, pyaudio.paContinue
-
-

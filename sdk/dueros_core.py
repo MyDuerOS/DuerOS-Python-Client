@@ -23,15 +23,17 @@ import datetime
 
 import hyper
 
+import sdk.configurate
+import sdk.sdk_config as sdk_config
+
 from sdk.interface.alerts import Alerts
 from sdk.interface.audio_player import AudioPlayer
 from sdk.interface.speaker import Speaker
 from sdk.interface.speech_recognizer import SpeechRecognizer
 from sdk.interface.speech_synthesizer import SpeechSynthesizer
 from sdk.interface.system import System
-import sdk.configurate
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=sdk_config.LOGGER_LEVEL)
 logger = logging.getLogger(__name__)
 
 

@@ -34,7 +34,9 @@
 
  
 ## 代码结构
+
 DuerOS-Python-Client代码结构如下图所示，
+
 ![代码结构](./readme_resources/代码结构.png)
 
 其中，

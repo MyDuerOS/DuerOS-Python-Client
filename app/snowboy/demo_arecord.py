@@ -1,4 +1,4 @@
-import snowboydecoder
+import snowboydecoder_arecord
 import sys
 import signal
 
@@ -24,11 +24,11 @@ model = sys.argv[1]
 # capture SIGINT signal, e.g., Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
 
-detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5)
+detector = snowboydecoder_arecord.HotwordDetector(model, sensitivity=0.5)
 print('Listening... Press Ctrl+C to exit')
 
 # main loop
-detector.start(detected_callback=snowboydecoder.play_audio_file,
+detector.start(detected_callback=snowboydecoder_arecord.play_audio_file,
                interrupt_check=interrupt_callback,
                sleep_time=0.03)
 

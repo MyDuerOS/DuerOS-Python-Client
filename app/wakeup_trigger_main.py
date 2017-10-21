@@ -182,7 +182,7 @@ def main():
     dueros.set_directive_listener(directive_listener)
 
     # [小度小度] SnowBoy唤醒引擎
-    model = 'app/snowboy/xiaoduxiaodu.pmdl'
+    model = 'app/snowboy/xiaoduxiaodu_all_10022017.umdl'
     # SnowBoy唤醒引擎实体
     snowboy = SnowBoy(model)
 

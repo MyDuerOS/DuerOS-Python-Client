@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import collections
-import pyaudio
 import snowboydetect
 import time
 import wave
 import os
 import logging
+import subprocess
+import threading
 
 logging.basicConfig()
 logger = logging.getLogger("snowboy")
@@ -19,7 +20,7 @@ DETECT_DONG = os.path.join(TOP_DIR, "resources/dong.wav")
 
 
 class RingBuffer(object):
-    """Ring buffer to hold audio from PortAudio"""
+    """Ring buffer to hold audio from audio capturing tool"""
     def __init__(self, size = 4096):
         self._buf = collections.deque(maxlen=size)
 
@@ -41,19 +42,7 @@ def play_audio_file(fname=DETECT_DING):
     :param str fname: wave file name
     :return: None
     """
-    ding_wav = wave.open(fname, 'rb')
-    ding_data = ding_wav.readframes(ding_wav.getnframes())
-    audio = pyaudio.PyAudio()
-    stream_out = audio.open(
-        format=audio.get_format_from_width(ding_wav.getsampwidth()),
-        channels=ding_wav.getnchannels(),
-        rate=ding_wav.getframerate(), input=False, output=True)
-    stream_out.start_stream()
-    stream_out.write(ding_data)
-    time.sleep(0.2)
-    stream_out.stop_stream()
-    stream_out.close()
-    audio.terminate()
+    os.system("aplay " + fname + " > /dev/null 2>&1")
 
 
 class HotwordDetector(object):
@@ -74,11 +63,6 @@ class HotwordDetector(object):
                  sensitivity=[],
                  audio_gain=1):
 
-        # def audio_callback(in_data, frame_count, time_info, status):
-        #     self.ring_buffer.extend(in_data)
-        #     play_data = chr(0) * len(in_data)
-        #     return play_data, pyaudio.paContinue
-
         tm = type(decoder_model)
         ts = type(sensitivity)
         if tm is not list:
@@ -94,30 +78,37 @@ class HotwordDetector(object):
 
         if len(decoder_model) > 1 and len(sensitivity) == 1:
             sensitivity = sensitivity*self.num_hotwords
-        #if len(sensitivity) != 0:
-        #    assert self.num_hotwords == len(sensitivity), \
-        #        "number of hotwords in decoder_model (%d) and sensitivity " \
-        #        "(%d) does not match" % (self.num_hotwords, len(sensitivity))
+        if len(sensitivity) != 0:
+            assert self.num_hotwords == len(sensitivity), \
+                "number of hotwords in decoder_model (%d) and sensitivity " \
+                "(%d) does not match" % (self.num_hotwords, len(sensitivity))
         sensitivity_str = ",".join([str(t) for t in sensitivity])
         if len(sensitivity) != 0:
-            self.detector.SetSensitivity('0.35, 0.35, 0.45')
+            self.detector.SetSensitivity(sensitivity_str.encode())
 
         self.ring_buffer = RingBuffer(
             self.detector.NumChannels() * self.detector.SampleRate() * 5)
 
-        # self.audio = pyaudio.PyAudio()
-        # self.stream_in = self.audio.open(
-        #     input=True, output=False,
-        #     format=self.audio.get_format_from_width(
-        #         self.detector.BitsPerSample() / 8),
-        #     channels=self.detector.NumChannels(),
-        #     rate=self.detector.SampleRate(),
-        #     frames_per_buffer=2048,
-        #     stream_callback=audio_callback)
+    def record_proc(self):
+        CHUNK = 2048
+        RECORD_RATE = 16000
+        cmd = 'arecord -q -r %d -f S16_LE' % RECORD_RATE
+        process = subprocess.Popen(cmd.split(' '),
+                                   stdout = subprocess.PIPE,
+                                   stderr = subprocess.PIPE)
+        wav = wave.open(process.stdout, 'rb')
+        while self.recording:
+            data = wav.readframes(CHUNK)
+            self.ring_buffer.extend(data)
+        process.terminate()
 
-    def feed_data(self, data):
-        self.ring_buffer.extend(data)
-
+    def init_recording(self):
+        """
+        Start a thread for spawning arecord process and reading its stdout
+        """
+        self.recording = True
+        self.record_thread = threading.Thread(target = self.record_proc)
+        self.record_thread.start()
 
     def start(self, detected_callback=play_audio_file,
               interrupt_check=lambda: False,
@@ -138,6 +129,9 @@ class HotwordDetector(object):
         :param float sleep_time: how much time in second every loop waits.
         :return: None
         """
+
+        self.init_recording()
+
         if interrupt_check():
             logger.debug("detect voice return")
             return
@@ -182,6 +176,6 @@ class HotwordDetector(object):
         Terminate audio stream. Users cannot call start() again to detect.
         :return: None
         """
-        self.stream_in.stop_stream()
-        self.stream_in.close()
-        self.audio.terminate()
+        self.recording = False
+        self.record_thread.join()
+

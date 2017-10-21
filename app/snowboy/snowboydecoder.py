@@ -91,6 +91,7 @@ class HotwordDetector(object):
             resource_filename=resource.encode(), model_str=model_str.encode())
         self.detector.SetAudioGain(audio_gain)
         self.num_hotwords = self.detector.NumHotwords()
+        self.detector.ApplyFrontend(True)
 
         if len(decoder_model) > 1 and len(sensitivity) == 1:
             sensitivity = sensitivity*self.num_hotwords

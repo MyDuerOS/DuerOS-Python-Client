@@ -31,7 +31,7 @@ class Alerts(object):
         self.player.add_callback('eos', self.stop)
         self.player.add_callback('error', self.stop)
 
-        alarm = os.path.realpath(os.path.join(os.path.dirname(__file__), '../resources/alarm.mp3'))
+        alarm = os.path.realpath(os.path.join(os.path.dirname(__file__), '../resources/alarm.wav'))
         self.alarm_uri = 'file://{}'.format(alarm)
 
         self.all_alerts = {}
@@ -83,34 +83,34 @@ class Alerts(object):
 
         self.__delete_alert_succeeded(token)
 
-        def __start_alert(self, token):
-            '''
-            开始响铃
-            :param self:
-            :param token:
-            :return:
-            '''
-            if token in self.all_alerts:
-                self.__alert_started(token)
+    def __start_alert(self, token):
+        '''
+        开始响铃
+        :param self:
+        :param token:
+        :return:
+        '''
+        if token in self.all_alerts:
+            self.__alert_started(token)
 
-                # TODO: repeat play alarm until user stops it or timeout
-                self.player.play(self.alarm_uri)
+            # TODO: repeat play alarm until user stops it or timeout
+            self.player.play(self.alarm_uri)
 
-                # {
-                #     "directive": {
-                #         "header": {
-                #             "namespace": "Alerts",
-                #             "name": "SetAlert",
-                #             "messageId": "{{STRING}}",
-                #             "dialogRequestId": "{{STRING}}"
-                #         },
-                #         "payload": {
-                #             "token": "{{STRING}}",
-                #             "type": "{{STRING}}",
-                #             "scheduledTime": "2017-08-07T09:02:58+0000",
-                #         }
-                #     }
-                # }
+            # {
+            #     "directive": {
+            #         "header": {
+            #             "namespace": "Alerts",
+            #             "name": "SetAlert",
+            #             "messageId": "{{STRING}}",
+            #             "dialogRequestId": "{{STRING}}"
+            #         },
+            #         "payload": {
+            #             "token": "{{STRING}}",
+            #             "type": "{{STRING}}",
+            #             "scheduledTime": "2017-08-07T09:02:58+0000",
+            #         }
+            #     }
+            # }
 
     def __set_alert_succeeded(self, token):
         '''

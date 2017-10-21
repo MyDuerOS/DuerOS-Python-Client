@@ -5,8 +5,9 @@
 import logging
 from sdk.dueros_core import DuerOS
 
-from framework.mic import Audio
-from framework.player import Player
+from app.framework.mic import Audio
+from app.framework.player import Player
+from app.utils.prompt_tone import PromptTone
 
 logging.basicConfig(level=logging.INFO)
 
@@ -17,7 +18,7 @@ def directive_listener(directive_content):
     :param directive_content:云端下发directive内容
     :return:
     '''
-    content = u'云端下发directive:%s'%(directive_content)
+    content = u'云端下发directive:%s' % (directive_content)
     logging.info(content)
 
 
@@ -35,6 +36,8 @@ def main():
     dueros.start()
     audio.start()
 
+    prompt_tone_player = PromptTone()
+
     while True:
         try:
             try:
@@ -42,7 +45,8 @@ def main():
                 input('单击[Enter]建，然后发起对话\n')
             except SyntaxError:
                 pass
-
+            # 唤醒态提示音
+            prompt_tone_player.play()
             dueros.listen()
         except KeyboardInterrupt:
             break

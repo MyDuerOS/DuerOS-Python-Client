@@ -14,11 +14,11 @@ except ImportError:
 
 import logging
 
-from framework.player import Player
 from sdk.dueros_core import DuerOS
-from framework.mic import Audio
-
+from app.framework.player import Player
+from app.framework.mic import Audio
 from app.snowboy import snowboydecoder
+from app.utils.prompt_tone import PromptTone
 
 logging.basicConfig(level=logging.INFO)
 
@@ -190,12 +190,16 @@ def main():
     wakeup_engine.link(dueros)
     wakeup_engine.set_wakeup_detector(snowboy)
 
+    prompt_tone_player = PromptTone()
+
     def wakeup():
         '''
         唤醒回调
         :return:
         '''
         print '[小度]已唤醒,我能为你做些什么..........'
+        # 唤醒态提示音
+        prompt_tone_player.play()
         dueros.listen()
 
     snowboy.set_callback(wakeup)

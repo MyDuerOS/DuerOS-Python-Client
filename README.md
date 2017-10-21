@@ -27,7 +27,7 @@
 
 然后，每次单击[Enter]键后进行语音输入
 ### 通过[小度小度]触发唤醒状态
-在DuerOS-Python-Client目录下执行
+在DuerOS-Python-Client目录下执行(暂时该功能还不支持)
 
     # ./wakeup_trigger_start.sh
 然后，每次通过[小度小度]进行唤醒，然后，进行语音输入

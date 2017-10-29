@@ -102,7 +102,7 @@ class DuerOS(object):
         self.put = self.speech_recognizer.put
 
         # listen() will trigger SpeechRecognizer's Recognize event
-        self.listen = self.speech_recognizer.recognize
+        # self.listen = self.speech_recognizer.recognize
 
         self.done = False
 
@@ -148,6 +148,13 @@ class DuerOS(object):
         :return:
         '''
         self.done = True
+
+    def listen(self):
+        '''
+        DuerOS进入语音识别状态
+        :return:
+        '''
+        self.speech_recognizer.recognize()
 
     def send_event(self, event, listener=None, attachment=None):
         '''

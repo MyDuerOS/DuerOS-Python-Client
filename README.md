@@ -35,7 +35,9 @@
  
 ## 代码结构
 DuerOS-Python-Client代码结构如下图所示，
-![图片](http://bos.nj.bpc.baidu.com/v1/agroup/917883ac8443ef8ad5c5d11c13fd6ab0ae3a40dd)
+
+![图片](./readme_resources/代码结构.png)
+
 
 其中，
 

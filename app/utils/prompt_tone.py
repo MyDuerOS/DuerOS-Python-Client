@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from app.framework.player.default_player.player import Player
+from app.framework.player.player import Player
 
 
 class PromptTone(object):

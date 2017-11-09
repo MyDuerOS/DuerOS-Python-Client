@@ -5,8 +5,7 @@
 import logging
 
 from app.framework.mic.default_mic.mic import Audio
-# from app.framework.player.default_player.player import Player
-from app.framework.player.aec_player.player import Player
+from app.framework.player.player import Player
 from app.utils.prompt_tone import PromptTone
 from sdk.dueros_core import DuerOS
 

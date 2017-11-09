@@ -16,7 +16,7 @@ import logging
 import app.app_config as app_config
 
 from sdk.dueros_core import DuerOS
-from app.framework.player.default_player.player import Player
+from app.framework.player.player import Player
 from app.framework.mic.default_mic.mic import Audio
 from app.snowboy import snowboydecoder
 from app.utils.prompt_tone import PromptTone

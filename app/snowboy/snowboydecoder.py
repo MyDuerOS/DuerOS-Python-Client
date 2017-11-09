@@ -8,8 +8,6 @@ import wave
 import os
 import logging
 
-import sdk.sdk_config as sdk_config
-
 logging.basicConfig()
 logger = logging.getLogger("snowboy")
 logger.setLevel(logging.INFO)
@@ -22,8 +20,7 @@ DETECT_DONG = os.path.join(TOP_DIR, "resources/dong.wav")
 
 class RingBuffer(object):
     """Ring buffer to hold audio from PortAudio"""
-
-    def __init__(self, size=4096):
+    def __init__(self, size = 4096):
         self._buf = collections.deque(maxlen=size)
 
     def extend(self, data):
@@ -72,16 +69,15 @@ class HotwordDetector(object):
                               default sensitivity in the model will be used.
     :param audio_gain: multiply input volume by this factor.
     """
-
     def __init__(self, decoder_model,
                  resource=RESOURCE_FILE,
                  sensitivity=[],
                  audio_gain=1):
 
-        # def audio_callback(in_data, frame_count, time_info, status):
-        #     self.ring_buffer.extend(in_data)
-        #     play_data = chr(0) * len(in_data)
-        #     return play_data, pyaudio.paContinue
+        def audio_callback(in_data, frame_count, time_info, status):
+            self.ring_buffer.extend(in_data)
+            play_data = chr(0) * len(in_data)
+            return play_data, pyaudio.paContinue
 
         tm = type(decoder_model)
         ts = type(sensitivity)
@@ -97,14 +93,14 @@ class HotwordDetector(object):
         self.num_hotwords = self.detector.NumHotwords()
 
         if len(decoder_model) > 1 and len(sensitivity) == 1:
-            sensitivity = sensitivity * self.num_hotwords
-        # if len(sensitivity) != 0:
-        #    assert self.num_hotwords == len(sensitivity), \
-        #        "number of hotwords in decoder_model (%d) and sensitivity " \
-        #        "(%d) does not match" % (self.num_hotwords, len(sensitivity))
-        # sensitivity_str = ",".join([str(t) for t in sensitivity])
+            sensitivity = sensitivity*self.num_hotwords
         if len(sensitivity) != 0:
-            self.detector.SetSensitivity(sdk_config.SNOWBOAY_SENSITIVITY)
+            assert self.num_hotwords == len(sensitivity), \
+                "number of hotwords in decoder_model (%d) and sensitivity " \
+                "(%d) does not match" % (self.num_hotwords, len(sensitivity))
+        sensitivity_str = ",".join([str(t) for t in sensitivity])
+        if len(sensitivity) != 0:
+            self.detector.SetSensitivity(sensitivity_str.encode())
 
         self.ring_buffer = RingBuffer(
             self.detector.NumChannels() * self.detector.SampleRate() * 5)
@@ -121,6 +117,7 @@ class HotwordDetector(object):
 
     def feed_data(self, data):
         self.ring_buffer.extend(data)
+
 
     def start(self, detected_callback=play_audio_file,
               interrupt_check=lambda: False,
@@ -174,7 +171,7 @@ class HotwordDetector(object):
                 message += time.strftime("%Y-%m-%d %H:%M:%S",
                                          time.localtime(time.time()))
                 logger.info(message)
-                callback = detected_callback[ans - 1]
+                callback = detected_callback[ans-1]
                 if callback is not None:
                     callback()
 
@@ -185,6 +182,7 @@ class HotwordDetector(object):
         Terminate audio stream. Users cannot call start() again to detect.
         :return: None
         """
-        self.stream_in.stop_stream()
-        self.stream_in.close()
-        self.audio.terminate()
+        # self.stream_in.stop_stream()
+        # self.stream_in.close()
+        # self.audio.terminate()
+        pass

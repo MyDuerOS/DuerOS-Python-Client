@@ -3,11 +3,12 @@
 通过输入[Enter]触发唤醒状态
 '''
 import logging
-from sdk.dueros_core import DuerOS
 
-from app.framework.mic import Audio
-from app.framework.player import Player
+from app.framework.mic.default_mic.mic import Audio
+# from app.framework.player.default_player.player import Player
+from app.framework.player.aec_player.player import Player
 from app.utils.prompt_tone import PromptTone
+from sdk.dueros_core import DuerOS
 
 logging.basicConfig(level=logging.INFO)
 

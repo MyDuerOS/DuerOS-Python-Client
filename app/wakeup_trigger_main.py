@@ -16,8 +16,8 @@ import logging
 import app.app_config as app_config
 
 from sdk.dueros_core import DuerOS
-from app.framework.player import Player
-from app.framework.mic import Audio
+from app.framework.player.default_player.player import Player
+from app.framework.mic.default_mic.mic import Audio
 from app.snowboy import snowboydecoder
 from app.utils.prompt_tone import PromptTone
 
@@ -183,7 +183,8 @@ def main():
     dueros.set_directive_listener(directive_listener)
 
     # [小度小度] SnowBoy唤醒引擎
-    model = 'app/snowboy/xiaoduxiaodu_all_10022017.umdl'
+    # model = 'app/snowboy/xiaoduxiaodu_all_10022017.umdl'
+    model = 'app/snowboy/xiaobai.pmdl'
     # SnowBoy唤醒引擎实体
     snowboy = SnowBoy(model)
 

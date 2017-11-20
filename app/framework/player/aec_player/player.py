@@ -6,7 +6,7 @@ class Player(object):
     def __init__(self):
         self.ipc_client=IpcClient()
         self.ipc_client.add_listener(self.__ipc_listener)
-
+        self.call_table = {}
     def play(self, url):
         # msg = ProcessMessage()
         # msg.type = common_params.PROCESS_MESSAGE_TPYE_AUDIO_PLAY
@@ -50,10 +50,14 @@ class Player(object):
         self.ipc_client.send(msg)
 
     def add_callback(self, name, callback):
-        pass
+        print "add a callback for :", name
+        self.call_table[name] = callback
 
     def __ipc_listener(self, msg):
-        pass
+        print "received msg type = ", msg.type
+        callbackfunc = self.call_table[msg.type]
+        if (callbackfunc and callable(callbackfunc)):
+            callbackfunc()
 
     @property
     def duration(self):

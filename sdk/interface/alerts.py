@@ -28,8 +28,8 @@ class Alerts(object):
         self.dueros = dueros
         self.player = player
 
-        self.player.add_callback('eos', self.stop)
-        self.player.add_callback('error', self.stop)
+        #self.player.add_callback('eos', self.stop)
+        #self.player.add_callback('error', self.stop)
 
         alarm = os.path.realpath(os.path.join(os.path.dirname(__file__), '../resources/alarm.wav'))
         self.alarm_uri = 'file://{}'.format(alarm)

@@ -99,20 +99,22 @@ class IpcClient(object):
         while self.recv_thread_flag:
             print '\n\n\nipc recv msg:\n\n\n'
             msg = ProcessMessage()
-            pos = 0
+            #read length part in messge
             package_size = self.local_socket_client.recv(4)
-            pos += 4
             package_size = struct.unpack('i', package_size)[0]
-            print 'recv package_size= ', package_size
+            print 'whole received package size= ', package_size
 
+            #read length of bytes form socked
             package_body = self.local_socket_client.recv(package_size)
 
+            #read the type of packet
+            pos = 0
             int_type = package_body[pos:pos + 4]
             pos += 4
             package_type = package_body[pos:pos + 4]
             msg.type = struct.unpack('i', package_type)[0]
-            print 'recv msg.type= ', msg.type
-
+            print 'recv msg.type= %d' %(msg.type)
+            pos += 4
             while pos < package_size:
                 # key
                 key_len = struct.unpack('i', package_body[pos:pos + 4])[0]

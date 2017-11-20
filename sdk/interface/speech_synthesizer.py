@@ -7,7 +7,7 @@ import os
 import tempfile
 import threading
 import uuid
-
+from app.framework.player.default_player.player import Player
 
 class SpeechSynthesizer(object):
     '''
@@ -26,8 +26,8 @@ class SpeechSynthesizer(object):
         self.token = ''
         self.state = 'FINISHED'
         self.finished = threading.Event()
-
-        self.player = player
+        default_player = Player()
+        self.player = default_player
         self.player.add_callback('eos', self.__speech_finished)
         self.player.add_callback('error', self.__speech_finished)
 

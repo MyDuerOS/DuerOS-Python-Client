@@ -9,12 +9,22 @@ import os
 import tempfile
 import uuid
 
+ProcessMessageCallbackTypePlaybackStarted = 2005
+ProcessMessageCallbackTypePlaybackStopped = 2006
+ProcessMessageCallbackTypePlaybackNearlyFinished = 2007
+ProcessMessageCallbackTypePlaybackFinished = 2008
+ProcessMessageCallbackTypeProgressReportIntervalElapsed = 2009
+ProcessMessageCallbackTypeStartPlayTime = 2010
+
+ProcessMessageCallbackStatusTypeStart = 3000
+ProcessMessageCallbackStatusTypeStop = 3001
 
 class AudioPlayer(object):
     '''
     音乐播放类
     '''
     STATES = {'IDLE', 'PLAYING', 'STOPPED', 'PAUSED', 'BUFFER_UNDERRUN', 'FINISHED'}
+
 
     def __init__(self, dueros, player):
         '''
@@ -28,8 +38,15 @@ class AudioPlayer(object):
         self.state = 'IDLE'
 
         self.player = player
-        self.player.add_callback('eos', self.__playback_finished)
-        self.player.add_callback('error', self.__playback_failed)
+        self.player.add_callback(ProcessMessageCallbackTypePlaybackStarted, self.__playback_started())
+        self.player.add_callback(ProcessMessageCallbackTypePlaybackFinished, self.__playback_finished())
+        self.player.add_callback(ProcessMessageCallbackTypePlaybackNearlyFinished, self.__playback_nearly_finished())
+        self.player.add_callback(ProcessMessageCallbackTypeProgressReportIntervalElapsed, self.__progress_report_interval_elapsed())
+        self.player.add_callback(ProcessMessageCallbackTypeStartPlayTime, self.__playback_default())
+        self.player.add_callback(ProcessMessageCallbackTypePlaybackStopped, self.__playback_stopped())
+
+        self.player.add_callback(ProcessMessageCallbackStatusTypeStart, self.__playback_default())
+        self.player.add_callback(ProcessMessageCallbackStatusTypeStop, self.__playback_default())
 
     # {
     #     "directive": {
@@ -117,7 +134,8 @@ class AudioPlayer(object):
             self.player.stop()
         elif behavior == 'CLEAR_ENQUEUED':
             pass
-
+    def __playback_default(self):
+        print "staus changed from external player process"
     def __playback_started(self):
         '''
         开始播放状态上报

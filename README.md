@@ -1,4 +1,8 @@
 # DuerOS-Python-Client使用说明
+文档参考
+* [《Step by Step带你玩转DuerOS - Python DuerOS SDK[树莓派平台] (3)》](https://dueros.baidu.com/didp/forum/topic/show?topicId=244796)
+* [《Step by Step带你玩转DuerOS - 内容目录》](https://dueros.baidu.com/didp/forum/topic/show?topicId=244800)
+
 ## 运行依赖
 * gstreamer1.0
 * gstreamer1.0-plugins-good

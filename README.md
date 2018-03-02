@@ -1,4 +1,7 @@
 # DuerOS-Python-Client使用说明
+文档参考
+* [《Step by Step带你玩转DuerOS - Python DuerOS SDK[Ubuntu平台] (2)》](http://open.duer.baidu.com/forum/topic/show?topicId=244631)
+* [《Step by Step带你玩转DuerOS - 内容目录》](https://dueros.baidu.com/didp/forum/topic/show?topicId=244800)
 ## 运行依赖
 * gstreamer1.0
 * gstreamer1.0-plugins-good

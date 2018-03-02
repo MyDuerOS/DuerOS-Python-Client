@@ -14,6 +14,10 @@
 * Ubuntu 16.04
 * Python 2.7.12
 ## 使用说明
+
+### 树莓派运行环境要求
+需要使用DuerOS的树莓派镜像，不能直接使用树莓派的官方镜像。在DuerOS的官方镜像中已支持了DuerOS-Python-Client运行的环境，如OpenSSL和Python更新。不再需要手动更新，直接运行DuerOS-Python-Client即可。
+
 ### 项目获取
 通过git下载代码到本地
 
